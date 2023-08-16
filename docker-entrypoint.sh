@@ -88,6 +88,8 @@ if ! [ -z "$INPUT_DOCKER_PRUNE" ] && [ $INPUT_DOCKER_PRUNE = 'true' ] ; then
   yes | docker --log-level debug --host "ssh://$INPUT_REMOTE_DOCKER_HOST:$INPUT_REMOTE_DOCKER_PORT" system prune -a 2>&1
 fi
 
+ENV="env $(env | grep "_DOCKER" | tr '\n' ' ' | sed -e 's/_DOCKER//g')"
+
 if ! [ -z "$INPUT_COPY_STACK_FILE" ] && [ $INPUT_COPY_STACK_FILE = 'true' ] ; then
   execute_ssh "mkdir -p $INPUT_DEPLOY_PATH/stacks || true"
   FILE_NAME="docker-stack-$(date +%Y%m%d%s).yaml"
@@ -109,7 +111,7 @@ if ! [ -z "$INPUT_COPY_STACK_FILE" ] && [ $INPUT_COPY_STACK_FILE = 'true' ] ; th
     execute_ssh "${DEPLOYMENT_COMMAND}  $INPUT_PRE_DEPLOYMENT_COMMAND_ARGS" 2>&1
   fi
 
-  execute_ssh ${DEPLOYMENT_COMMAND} "$INPUT_ARGS" 2>&1
+  execute_ssh "${ENV} ${DEPLOYMENT_COMMAND}" "$INPUT_ARGS" 2>&1
 else
   echo "Connecting to $INPUT_REMOTE_DOCKER_HOST... Command: ${DEPLOYMENT_COMMAND} ${INPUT_ARGS}"
   ${DEPLOYMENT_COMMAND} ${INPUT_ARGS} 2>&1
